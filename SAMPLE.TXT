@@ -1,0 +1,12 @@
+https://www.dropbox.com/scl/fi/btfiqwdl9u6zthezig74b/jaink987654321.json?rlkey=fbh8ea7gn2v0hpxfd0j9atsxz&dl=1
+https://www.dropbox.com/scl/fi/eu7ev524e531q3qsg4bhd/jaink7069.json?rlkey=irtb8h971mcgkq234sqnq961i&dl=1
+Flask==2.2.5
+Flask-Cors==5.0.0
+flask-mongoengine==1.0.0
+Flask-PyMongo==2.3.0
+Flask-WTF==1.2.2
+PyJWT==2.8.0
+pymongo==4.9.2
+requests==2.31.0
+requests-oauthlib==1.3.1
+textblob==0.18.0.post0
