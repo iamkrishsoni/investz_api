@@ -14,7 +14,7 @@ from textblob import TextBlob
 app = Flask(__name__)
 CORS(app)  
 app.config['SECRET_KEY'] = 'INVESTZ123'  
-port = 443
+port = 8000
 
 
 api_url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=IBM&apikey=ZVCGG3ZMTYIIP87Z'

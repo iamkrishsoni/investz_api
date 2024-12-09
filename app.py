@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing
 
 api_url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=IBM&apikey=ZVCGG3ZMTYIIP87Z'
-port = 9000
+port = 8000
 
 def analyze_sentiment(text):
     """
