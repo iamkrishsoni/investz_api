@@ -10,12 +10,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from bson.json_util import dumps
 import requests
 from textblob import TextBlob
+from bson import ObjectId
 
 app = Flask(__name__)
 CORS(app)  
 app.config['SECRET_KEY'] = 'INVESTZ123'  
-port = 8000
-
+port=443
 
 api_url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=IBM&apikey=ZVCGG3ZMTYIIP87Z'
 # MongoDB connection URI
@@ -24,6 +24,7 @@ client = MongoClient(mongo_uri)
 db = client["investz"]
 user_collection = db["USER"]
 portfolio_collection = db["PORTFOLIO"]
+
 
 
 def analyze_sentiment(text):
@@ -255,6 +256,38 @@ def save_portfolio():
 
     return jsonify(stock_details), 200
 
+@app.route('/get_portfolio', methods=['POST'])
+def get_portfolio():
+    try:
+        # Get the email from the POST request body
+        data = request.get_json()
+        email = data.get("email")
+
+        if not email:
+            return jsonify({
+                "status": "error",
+                "message": "Email is required"
+            }), 400
+
+        # Find the portfolio for the given email
+        portfolio = portfolio_collection.find_one({"email": email})
+
+        if not portfolio:
+            check=[]
+            return jsonify(check), 200
+
+        # Convert ObjectId to string for JSON compatibility
+        portfolio['_id'] = str(portfolio['_id'])
+
+        return jsonify(portfolio['portfolio']), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
 @app.route('/latest-news')
 def latest_news():
     try:
@@ -311,6 +344,43 @@ def update_profile_photo():
 
     return jsonify({"message": "Profile updated successfully"}), 200
 
+
+@app.route('/get-stock-data', methods=['POST'])
+def get_stock_data():
+    data = request.get_json()
+    symbol = data.get('symbol')
+    
+    if not symbol:
+        return jsonify({"error": "No symbol provided"}), 400
+    
+    symbol_name = symbol.split('.')[0]
+
+    url = "https://www.alphavantage.co/query"
+    params = {
+        'function': 'TIME_SERIES_DAILY',
+        'symbol': f"{symbol_name}.BSE", 
+        'outputsize': 'full',
+        'apikey': "GKW8AS974VHJOE06"
+    }
+
+    response = requests.get(url, params=params)
+    result = response.json()
+    
+    if response.status_code == 200:
+        time_series = result.get('Time Series (Daily)', {})
+     
+        sorted_dates = sorted(
+            time_series.keys(), 
+            key=lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'),  # Updated usage
+            reverse=True
+        )
+        latest_date = sorted_dates[0]
+        latest_data = time_series[latest_date]
+
+        return jsonify(latest_data['4. close'])
+    
+    else:
+        return jsonify({"error": "Failed to fetch data from Alpha Vantage"}), 500
 
 # Decorator to verify the JWT token
 def token_required(f):
