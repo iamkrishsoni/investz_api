@@ -17,7 +17,7 @@ CORS(app)
 app.config['SECRET_KEY'] = 'INVESTZ123'  
 port=443
 
-api_url = 'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=IBM&apikey=ZVCGG3ZMTYIIP87Z'
+api_url = 'https://api.marketaux.com/v1/news/all?api_token=ir0kwZwXQT6rczYhlm86UJeJHUhMgNDYnbWi32Kr&countries=in'
 # MongoDB connection URI
 mongo_uri = "mongodb+srv://TEST:12345@mubustest.yfyj3.mongodb.net/investz?retryWrites=true&w=majority"
 client = MongoClient(mongo_uri)
@@ -291,18 +291,39 @@ def get_portfolio():
 @app.route('/latest-news')
 def latest_news():
     try:
-        # Make the API call using requests
-        response = requests.get(api_url)
-        data = response.json()
-        result=[]
-        for i in data['feed']:
-            results = analyze_sentiment(i['summary'])
-            result.append({"title": i['title'],"summary":i['summary'] , "url":i['url'] , "sentiment":results['sentiment'] ,
-                           "strength": results['strength'] , "polarity_score": results['polarity'] , "subjectivity_score":results['subjectivity']} )
-        return jsonify(result)
-        
+        # Get limit and page from query parameters
+        limit = int(request.args.get('limit', 3))
+        page = int(request.args.get('page', 1))  # Default to page 1
 
+        # Fetch data from the external API
+        response = requests.get(f"{api_url}&limit={limit}&page={page}")
+        response.raise_for_status()  # Raise an error for bad responses
+
+        # Parse API response
+        data = response.json()
+        result = []
+        for i in data.get('data', []):
+            try:
+                results = analyze_sentiment(i['description'])
+                result.append({
+                    "title": i['title'],
+                    "summary": i['description'],
+                    "url": i['url'],
+                    "sentiment": results['sentiment'],
+                    "strength": results['strength'],
+                    "polarity_score": results['polarity'],
+                    "subjectivity_score": results['subjectivity']
+                })
+            except Exception as e:
+                print(f"Error in sentiment analysis for article {i.get('title', 'unknown')}: {e}")
+
+        return jsonify(result)
+
+    except requests.exceptions.RequestException as req_err:
+        print("API Request Error:", req_err)
+        return jsonify({'error': 'Failed to fetch data from API'}), 500
     except Exception as e:
+        print("General Error:", e)
         return jsonify({'error': str(e)}), 500
 
 
