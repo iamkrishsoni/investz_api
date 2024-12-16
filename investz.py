@@ -214,6 +214,30 @@ def login():
     }
     return jsonify(user_data), 200
 
+@app.route('/delete_portfolio', methods=['POST'])
+def delete_portfolio():
+    data = request.get_json()
+    email = data.get('email')
+    stock_details = data.get('stock_details')  
+    if not email or not stock_details:
+        return jsonify({"error": "Email and form are required"}), 400
+
+    result = portfolio_collection.update_one(
+        {"email": email},                 
+        {"$pull": {"portfolio": stock_details}}    
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "No document found for the given email"}), 404
+
+    if result.modified_count == 0:
+        return jsonify({"message": "No matching portfolio entry found"}), 200
+
+    return jsonify({"message": "Portfolio entry deleted successfully"}), 200
+    
+    
+
+
 @app.route('/save_portfolio', methods=['POST'])
 def save_portfolio():
     data = request.get_json()
