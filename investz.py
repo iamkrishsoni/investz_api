@@ -311,7 +311,7 @@ def stock_news():
         for stock in stocks:
            print(stock)
            symbol_with_ns = f"{stock}.NS"
-           stock_url = f"https://api.marketaux.com/v1/news/all?symbols={symbol_with_ns}&filter_entities=true&language=en&api_token=DdbukSC5vcztykibkyNHcn1orQ5tqgscwYg1x5Ex"
+           stock_url = f"https://api.marketaux.com/v1/news/all?symbols={symbol_with_ns}&filter_entities=true&language=en&api_token=3LS0rE4VtzAGw7JwQppTJup9AT0uQ2UPBesBUKDO"
            response = requests.get(stock_url)
            response.raise_for_status()
            data = response.json()
