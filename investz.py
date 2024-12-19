@@ -28,17 +28,7 @@ portfolio_collection = db["PORTFOLIO"]
 
 
 def analyze_sentiment(text):
-    """
-    Analyze the sentiment of a given text using TextBlob.
-    Returns polarity (-1 to 1) and subjectivity (0 to 1) scores,
-    along with a sentiment label.
     
-    Parameters:
-    text (str): The text to analyze
-    
-    Returns:
-    dict: Dictionary containing sentiment analysis results
-    """
     # Clean the text
     def clean_text(text):
         # Remove special characters and digits
@@ -311,6 +301,43 @@ def get_portfolio():
             "message": str(e)
         }), 500
 
+
+@app.route('/stock_news', methods=['POST'])
+def stock_news():
+    try:
+        data = request.get_json()
+        stocks = data.get("stocks")
+        result=[]
+        for stock in stocks:
+           print(stock)
+           symbol_with_ns = f"{stock}.NS"
+           stock_url = f"https://api.marketaux.com/v1/news/all?symbols={symbol_with_ns}&filter_entities=true&language=en&api_token=DdbukSC5vcztykibkyNHcn1orQ5tqgscwYg1x5Ex"
+           response = requests.get(stock_url)
+           response.raise_for_status()
+           data = response.json()
+           print(len(data))
+           for i in data.get('data', []):
+                try:
+                    results = analyze_sentiment(i['description'])
+                    result.append({
+                        "title": i['title'],
+                        "summary": i['description'],
+                        "url": i['url'],
+                        "sentiment": results['sentiment'],
+                        "strength": results['strength'],
+                        "polarity_score": results['polarity'],
+                        "subjectivity_score": results['subjectivity']
+                    })
+                except Exception as e:
+                    print(f"Error in sentiment analysis for article {i.get('title', 'unknown')}: {e}")
+        return jsonify(result)
+    except requests.exceptions.RequestException as req_err:
+        print("API Request Error:", req_err)
+        return jsonify({'error': 'Failed to fetch data from API'}), 500
+    except Exception as e:
+        print("General Error:", e)
+        return jsonify({'error': str(e)}), 500
+    
 
 @app.route('/latest-news')
 def latest_news():
